@@ -15,9 +15,9 @@ const sourceStrings = {
   admin: {
     objectForm: {
       label: 'Пароль администратора',
-      hint: 'Не менее {minLength} символов. Сейчас ― {length}',
-    },
-  },
+      hint: 'Не менее {minLength} символов. Сейчас ― {length}'
+    }
+  }
 };
 
 const t = i18n(sourceStrings);
@@ -41,14 +41,34 @@ if (testDepth && testDepthFmt && testFormat)
 // === implementation ===
 
 type Input = {
-  /* TODO type input */
-};
-type Result<T> = {
-  /* TODO type output */
+  [key: string]: string | Input;
 };
 
+type Result<T> = {
+  [P in keyof T]: T[P] extends Input ? Result<T[P]> : FormatFunction;
+};
+
+type FormatFunction = (data?: { [key: string]: string | number }) => string;
+
 function i18n<T extends Input>(strings: T): Result<T> {
-  let templatedStrings = strings;
-  // TODO implementation
-  return templatedStrings;
+  let templatedStrings: Result<Input> = {};
+  const keys = Object.keys(strings);
+  keys.forEach(key => {
+    const item = strings[key];
+    if (typeof item === 'string') {
+      const pattern = /{(\w+)}/gm;
+      templatedStrings[key] = (args) => {
+        return item.replace(pattern, (match, p1) => {
+          if (args[p1]) {
+            return String(args[p1]);
+          } else {
+            return match;
+          }
+        });
+      };
+    } else {
+      templatedStrings[key] = i18n(item);
+    }
+  });
+  return <Result<T>>templatedStrings;
 }

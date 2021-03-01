@@ -53,10 +53,10 @@ type FormatFunction = (data?: { [key: string]: string | number }) => string;
 function i18n<T extends Input>(strings: T): Result<T> {
   let templatedStrings: Result<Input> = {};
   const keys = Object.keys(strings);
+  const pattern = /{(\w+)}/gm;
   keys.forEach(key => {
     const item = strings[key];
     if (typeof item === 'string') {
-      const pattern = /{(\w+)}/gm;
       templatedStrings[key] = (args) => {
         return item.replace(pattern, (match, p1) => {
           if (args[p1]) {
@@ -67,7 +67,7 @@ function i18n<T extends Input>(strings: T): Result<T> {
         });
       };
     } else {
-      templatedStrings[key] = i18n(item);
+        templatedStrings[key] = i18n(item);
     }
   });
   return <Result<T>>templatedStrings;
